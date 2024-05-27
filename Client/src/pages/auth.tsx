@@ -1,32 +1,50 @@
 import React, { useState } from 'react';
-import {useUserStore} from '../../store'
+import { useUserStore } from '../../store';
 import { useNavigate } from 'react-router-dom';
-
+import toast, { Toaster } from 'react-hot-toast';
+import { Spinner } from '@chakra-ui/react'; // Import Chakra UI Spinner
 
 const Auth: React.FC = () => {
   const [isSignIn, setIsSignIn] = useState(true);
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false); // State for submitting
   const { setUsername } = useUserStore();
-  const Navigate = useNavigate()
+  const Navigate = useNavigate();
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Call your API endpoint based on isSignIn state and name/password
-    if (isSignIn) {
-      // Sign in API call
-    } else {
-      // Sign up API call
+    if (!name || !password) {
+      toast.error("Enter name and password");
+      return;
     }
 
-    
-    //check
+    setSubmitting(true); // Set submitting state to true
 
-    //if successfull submit only then
+    const url = isSignIn
+      ? `${import.meta.env.VITE_REACT_APP_SERVER_URL}/signin`
+      : `${import.meta.env.VITE_REACT_APP_SERVER_URL}/signup`;
 
-    setUsername(name)
-    Navigate("/join")
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify({ username: name, password }),
+        headers: { 'Content-Type': 'application/json' },
+      });
 
+      const result = await response.json();
+      if (response.ok) {
+        toast.success(result.message);
+        setUsername(name);
+        Navigate("/join");
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setSubmitting(false); // Reset submitting state
+    }
   };
 
   const toggleAuthMode = () => {
@@ -35,6 +53,7 @@ const Auth: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-blue-200 flex flex-col justify-center items-center">
+      <Toaster />
       <h2 className="text-3xl mb-4">
         {isSignIn ? 'Sign In' : 'Sign Up'}
       </h2>
@@ -55,9 +74,10 @@ const Auth: React.FC = () => {
         />
         <button
           type="submit"
-          className="bg-blue-500 hover:bg-blue-600 text-blue-100 font-semibold px-4 py-2 rounded"
+          className="bg-blue-500 hover:bg-blue-600 text-blue-100 font-semibold px-4 py-2 rounded flex items-center justify-center"
+          disabled={submitting} // Disable button while submitting
         >
-          {isSignIn ? 'Sign In' : 'Sign Up'}
+          {submitting ? <Spinner size="sm" color="white" /> : (isSignIn ? 'Sign In' : 'Sign Up')}
         </button>
       </form>
       <p className="mt-4">

@@ -2,6 +2,9 @@ import express from 'express'
 import { Request, Response } from 'express'
 import { WebSocketServer, WebSocket } from 'ws'
 import cors from 'cors'
+import ConnectDB from './database'
+import bcrypt from 'bcrypt'
+import User from "./database/models/User"
 
 const app = express()
 const httpServer = app.listen(8080,()=>{
@@ -43,22 +46,62 @@ wss.on('connection', function connection(ws) {
     else if(message.Title==="User-left"){
       handleUserLeft(message)
     }
-    // wss.clients.forEach(function each(client) {
-    //   if (client.readyState === WebSocket.OPEN) {
-    //     client.send(data, { binary: isBinary });
-    //   }
-    // });
+    else if(message.Title==="New-chat"){
+      handleNewChat(message)
+    }
+    else if(message.Title==="lang-change"){
+      handleLangChange(message)
+    }
+    else if(message.Title==="Code-change"){
+      handleCodeChange(message)
+    }
+    else if(message.Title==="Submitted"){
+      handleSubmitted(message)
+    }
   });
 
   ws.send(JSON.stringify({Title : "Greet" , msg:'Hello! Message From Server!!'}));
 });
 
-app.post("/signin",(req:Request,res:Response)=>{
+app.post("/signin",async(req:Request,res:Response)=>{
+  await ConnectDB();
+  const { username, password } = req.body;
 
+  try {
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ message: 'user not found' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid password' });
+    }
+
+    res.status(200).json({ message: 'Login successful' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 })
 
-app.post("/signup",(req:Request,res:Response)=>{
+app.post("/signup",async(req:Request,res:Response)=>{
+  await ConnectDB();
+  const { username, password } = req.body;
 
+  try {
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ username, password: hashedPassword });
+    await newUser.save();
+
+    res.status(201).json({ message: 'User created successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 })
 
 app.post("/create",(req:Request,res:Response)=>{
@@ -66,6 +109,7 @@ app.post("/create",(req:Request,res:Response)=>{
   const {username, roomName, roomId} = req.body;
   if(!username || !roomName || !roomId){
     res.status(400).json({error : "Some error"})
+    return;
   }
   
   const newRoom: room = {
@@ -92,6 +136,10 @@ function handleUserJoined(message:any, ws : WebSocket) {
   // Find the room based on roomId
   const room = rooms.find(room => room.roomId === roomId);
   if (!room) {
+    const notFoundMessage = JSON.stringify({
+      Title : "Not-found"
+    })
+    ws.send(notFoundMessage)
     return;
   }
 
@@ -172,4 +220,64 @@ function handleUserLeft(message: any) {
       user.ws.send(userLeftMessage);
     }
   });
+}
+
+function handleNewChat(message:any){
+  const {roomId, username, chat} = message
+  const room = rooms.find(room => room.roomId === roomId);
+  if (!room) {
+    return;
+  }
+  room.chats.push({username,message:chat})
+  const newChatMessage = JSON.stringify({
+    Title: "New-chat",
+    username,
+    chat
+  })
+  room.users.forEach(user => {
+    if (user.ws.readyState === WebSocket.OPEN) {
+      user.ws.send(newChatMessage);
+    }
+  });
+}
+
+function handleLangChange(message:any){
+  const { roomId, lang } = message
+  const room = rooms.find(room => room.roomId === roomId);
+  if (!room) {
+    return;
+  }
+  room.language = lang;
+  const langChangeMessage = {
+    Title:"lang-change",
+    lang
+  }
+  room.users.forEach(user => {
+    if (user.ws.readyState === WebSocket.OPEN) {
+      user.ws.send(JSON.stringify(langChangeMessage));
+    }
+  });
+}
+
+function handleCodeChange(message:any){
+  const { roomId, code } = message
+  const room = rooms.find(room => room.roomId === roomId);
+  if (!room) {
+    return;
+  }
+  room.code=code
+  const CodeChangeMessage = {
+    Title:"Code-change",
+    code
+  }
+  room.users.forEach(user => {
+    if (user.ws.readyState === WebSocket.OPEN) {
+      user.ws.send(JSON.stringify(CodeChangeMessage));
+    }
+  });
+}
+
+function handleSubmitted(message:any){
+  const {roomId, code } = message
+  
 }
