@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  redis:
+    image: "redis:latest"
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  server:
+    build:
+      context: ./Server
+      dockerfile: Dockerfile
+    env_file:
+      - ./Server/.env
+    container_name: server
+    depends_on:
+      - redis
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./Server:/src
+
+  worker:
+    build:
+      context: ./Worker
+      dockerfile: Dockerfile
+    env_file:
+      - ./Worker/.env
+    container_name: worker
+    depends_on:
+      - redis
+    volumes:
+      - ./Worker:/src
+    command: npm run start
+
+  client:
+    build:
+      context: ./Client
+      dockerfile: Dockerfile
+    env_file:
+      - ./Client/.env
+    container_name: client
+    depends_on:
+      - server
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./Client:/app
+
+volumes:
+  redis-data:
