@@ -1,6 +1,7 @@
 import express from 'express'
 import { Request, Response } from 'express'
 import { WebSocketServer, WebSocket } from 'ws'
+import { createClient } from 'redis'
 import cors from 'cors'
 import ConnectDB from './database'
 import bcrypt from 'bcrypt'
@@ -12,6 +13,21 @@ const httpServer = app.listen(8080,()=>{
 })
 app.use(cors())
 app.use(express.json());
+
+
+//connect to redis after launching it from docker
+
+const redisClient = createClient({
+  url: 'redis://localhost:6379'
+});
+
+const redisClientSubscribing = createClient({
+  url: 'redis://localhost:6379'
+});
+
+
+redisClient.connect().catch(err=>{console.log(err)})
+redisClientSubscribing.connect().catch(err=>{console.log(err)})
 
 type room = {
   name: string,
@@ -277,7 +293,47 @@ function handleCodeChange(message:any){
   });
 }
 
-function handleSubmitted(message:any){
-  const {roomId, code } = message
+async function handleSubmitted(message:any){
+  const {roomId} = message
+  const room = rooms.find(room => room.roomId === roomId);
+  if (!room) {
+    return;
+  }
+
+  const SubmitClickedMessage = {
+    Title:"Submit-clicked"
+  }
+
+  room.users.forEach(user => {
+    if (user.ws.readyState === WebSocket.OPEN) {
+      user.ws.send(JSON.stringify(SubmitClickedMessage));
+    }
+  });
   
+  //push the message into submissions queue
+  await redisClient.lPush("submissions",JSON.stringify(message))
+
+
+  //subscribe to the roomId
+  redisClientSubscribing.subscribe(roomId, (result) => {
+    console.log(`Result for ${roomId}: ${result}`);
+    
+    // Parse the result received from the subscription
+    const parsedResult = JSON.parse(result);
+    
+    // Create a new JSON object containing the required fields
+    const resultMessage = {
+        Title: "Result",
+        stdout: parsedResult.stdout,
+        stderr: parsedResult.stderr,
+        status: parsedResult.status.description,
+    };
+
+    // Send the resultMessageString to each user in the room
+    room.users.forEach(user => {
+      if (user.ws.readyState === WebSocket.OPEN) {
+        user.ws.send(JSON.stringify(resultMessage));
+      }
+    });
+  });
 }

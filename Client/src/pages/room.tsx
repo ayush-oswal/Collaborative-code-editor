@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {useUserStore} from '../../store'
-import { Box, Button, Flex, IconButton, Select, useDisclosure, Drawer, DrawerBody, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, useBreakpointValue } from '@chakra-ui/react';
+import { Box, Button, Flex, IconButton, Select, useDisclosure, Drawer, DrawerBody, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, useBreakpointValue, Spinner } from '@chakra-ui/react';
 import { HamburgerIcon, ChatIcon } from '@chakra-ui/icons';
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
@@ -10,6 +10,7 @@ import { java } from '@codemirror/lang-java';
 import { python } from '@codemirror/lang-python';
 import Members from '../components/members';
 import Chats from '../components/chats';
+import ResultModal from '../components/result';
 import toast, { Toaster } from 'react-hot-toast';
 
 //oof use localstorage instead of zustand as on refresh all info is lost
@@ -28,10 +29,12 @@ const Room: React.FC = () => {
   const [roomName,setRoomName] = useState("")
   const [users, setUsers] = useState<string[]>([])
   const [chats,setChats] = useState<chat[]>([])
-  const [result,setResult] = useState("")
+  const [result,setResult] = useState(null)
   const [language,setLanguage] = useState("")
   const [code,setCode] = useState("")
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [submitClicked, setSubmitClicked] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   //fire socket events on lang change, chat , code change, new user is done, add button leave user and copy room id
 
@@ -89,6 +92,14 @@ const Room: React.FC = () => {
       else if(parsedMessage.Title === "Code-change"){
         const { code } = parsedMessage
         setCode(code)
+      }
+      else if(parsedMessage.Title === "Submit-clicked"){
+        setSubmitClicked(true);
+      }
+      else if(parsedMessage.Title === "Result"){
+        setResult(parsedMessage)
+        setSubmitClicked(false)
+        setIsModalOpen(true);
       }
     }
     setSocket(newSocket)
@@ -152,10 +163,11 @@ const Room: React.FC = () => {
 
   const onSubmit = () => {
     console.log(code)
-    //make a post req to server, send the code there, subscribe to the roomid on pub-sub
+    //make a ws req to server, send the code there, subscribe to the roomid on pub-sub
     const msg = {
       Title : "Submitted",
       roomId,
+      language,
       code
     }
     socket?.send(JSON.stringify(msg))
@@ -200,20 +212,32 @@ const Room: React.FC = () => {
       {/* Main Content */}
       <Flex direction="column" bg="gray.900" flex="1" width={useBreakpointValue({ base: '100vh', md: '80vh', sm: '60vh' })} >
         {/* Header Bar */}
-        <Flex bg="gray.800" p="4" justify="center" align="center" position="relative">
-          <Box color="blue.200" fontWeight="semibold" ml="4">
-            {roomName}
-          </Box>
+        <Flex bg="gray.800" p="4" justify="center" align="center" position="relative" direction="column">
+
           <Flex align="center" justify="center">
+
+          {result && <Button onClick={()=>setIsModalOpen(true)} bg="blue.500" _hover={{ bg: 'blue.600' }} color="blue.100" fontWeight="semibold" px="4" py="2" rounded="md">Result</Button> }
+
+          { result && <ResultModal isOpen={isModalOpen} onClose={()=>{setIsModalOpen(false)}} resultMessage={result}/> }
+
+
             <Select value={language} onChange={(e) => handleLangChange(e.target.value)} bg="blue.900" color="blue.200" borderBottom="1px" borderColor="blue.400" rounded="md" px="2" py="1">
               <option value="javascript">JavaScript</option>
               <option value="java">Java</option>
-              <option value="cpp">C++</option>
+              <option value="cpp">Cpp</option>
               <option value="python">Python</option>
             </Select>
-            <Button onClick={()=>{onSubmit}} bg="blue.500" _hover={{ bg: 'blue.600' }} color="blue.100" fontWeight="semibold" px="4" py="2" rounded="md">
-              Submit
-            </Button>
+            <>
+              {submitClicked ? (
+                <Spinner size="md" thickness="4px" speed="0.65s" emptyColor="gray.200" color="blue.500" />) : 
+                (<Button onClick={onSubmit} bg="blue.500" _hover={{ bg: 'blue.600' }} color="blue.100" fontWeight="semibold" px="4" py="2" rounded="md">Submit</Button>
+              )}
+            </>
+          </Flex>
+          <Flex align="center" justify="center">
+            <Box color="blue.200" fontWeight="semibold" ml="4">
+              {roomName}
+            </Box>
           </Flex>
           {/* Sidebar Icons */}
           {!isLargeScreen && (
