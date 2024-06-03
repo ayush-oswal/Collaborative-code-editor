@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 8080
 
 # Command to run the server
-CMD ["npm", "run", "start"]
+CMD ["npm", "start"]

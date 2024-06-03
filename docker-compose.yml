@@ -34,7 +34,6 @@ services:
       - redis
     volumes:
       - ./Worker:/src
-    command: npm run start
 
   client:
     build:
