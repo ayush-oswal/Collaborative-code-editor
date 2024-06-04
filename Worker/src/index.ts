@@ -2,11 +2,13 @@ import { createClient } from "redis";
 import axios from "axios";
 import dotenv from "dotenv";
 
-const redisClient = createClient({
-    url: 'redis://localhost:6379'
-});
 
 dotenv.config();
+
+const redisClient = createClient({
+    url: process.env.REDIS_URL
+});
+
 
 async function processSubmission(submission: string) {
     const { roomId, code, language } = JSON.parse(submission);

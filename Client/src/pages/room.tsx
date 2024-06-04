@@ -13,7 +13,6 @@ import Chats from '../components/chats';
 import ResultModal from '../components/result';
 import toast, { Toaster } from 'react-hot-toast';
 
-//oof use localstorage instead of zustand as on refresh all info is lost
 
 type chat = 
   {
@@ -100,6 +99,10 @@ const Room: React.FC = () => {
         setResult(parsedMessage)
         setSubmitClicked(false)
         setIsModalOpen(true);
+      }
+      else if(parsedMessage.Title === "No-worker"){
+        setSubmitClicked(false)
+        alert("Code cannot be processed now cause it requires a continiously running worker service whcih is expensive 😅😅, if you want to, you can clone the repo and run worker process locally!!")
       }
     }
     setSocket(newSocket)

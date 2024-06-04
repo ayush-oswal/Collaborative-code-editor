@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Button } from '@chakra-ui/react';
+import toast from 'react-hot-toast';
 
 interface MembersProps {
   users: string[];
@@ -10,7 +11,7 @@ interface MembersProps {
 const Members: React.FC<MembersProps> = ({ users, roomId, onLeave }) => {
   const copyRoomIdToClipboard = () => {
     navigator.clipboard.writeText(roomId);
-    alert('Room ID copied to clipboard!');
+    toast.success('Room ID copied to clipboard!');
   };
 
   return (

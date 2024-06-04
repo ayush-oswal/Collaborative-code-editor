@@ -18,11 +18,11 @@ app.use(express.json());
 //connect to redis after launching it from docker
 
 const redisClient = createClient({
-  url: 'redis://localhost:6379'
+  url: process.env.REDIS_URL
 });
 
 const redisClientSubscribing = createClient({
-  url: 'redis://localhost:6379'
+  url: process.env.REDIS_URL
 });
 
 
@@ -309,6 +309,18 @@ async function handleSubmitted(message:any){
       user.ws.send(JSON.stringify(SubmitClickedMessage));
     }
   });
+
+  if(process.env.REDIS_URL === "" || !process.env.REDIS_URL){
+    const resultMessage = {
+      Title: "No-worker"
+    }
+    room.users.forEach(user => {
+      if (user.ws.readyState === WebSocket.OPEN) {
+        user.ws.send(JSON.stringify(resultMessage));
+      }
+    });
+    return;
+  }
   
   //push the message into submissions queue
   await redisClient.lPush("submissions",JSON.stringify(message))
