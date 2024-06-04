@@ -310,7 +310,7 @@ async function handleSubmitted(message:any){
     }
   });
 
-  if(process.env.REDIS_URL === "" || !process.env.REDIS_URL){
+  if(process.env.REDIS_URL === " " || !process.env.REDIS_URL){
     const resultMessage = {
       Title: "No-worker"
     }
