@@ -17,12 +17,14 @@ app.use(express.json());
 
 //connect to redis after launching it from docker
 
+const redis_url = process.env.REDIS_URL === "No-Url-provided" ? "" : process.env.REDIS_URL
+
 const redisClient = createClient({
-  url: process.env.REDIS_URL
+  url: redis_url
 });
 
 const redisClientSubscribing = createClient({
-  url: process.env.REDIS_URL
+  url: redis_url
 });
 
 
@@ -310,7 +312,7 @@ async function handleSubmitted(message:any){
     }
   });
 
-  if(process.env.REDIS_URL === " " || !process.env.REDIS_URL){
+  if(process.env.REDIS_URL === "No-Url-provided" || !process.env.REDIS_URL){
     const resultMessage = {
       Title: "No-worker"
     }
