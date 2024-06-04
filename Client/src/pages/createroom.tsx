@@ -32,8 +32,15 @@ const CreateRoom: React.FC = () => {
         return;
     }
     const serverUrl = import.meta.env.VITE_REACT_APP_SERVER_URL;
+    let url = ""
+    if(serverUrl === "://localhost:8080"){
+      url = `http${serverUrl}`
+    }
+    else{
+      url = `https${serverUrl}`
+    }
     try{
-      const response = await fetch(`${serverUrl}/create`,{
+      const response = await fetch(`${url}/create`,{
         method:"POST",
         headers: {
             "Content-Type": "application/json"

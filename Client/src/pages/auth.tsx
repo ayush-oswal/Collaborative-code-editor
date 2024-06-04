@@ -21,9 +21,19 @@ const Auth: React.FC = () => {
 
     setSubmitting(true); // Set submitting state to true
 
-    const url = isSignIn
-      ? `${import.meta.env.VITE_REACT_APP_SERVER_URL}/signin`
-      : `${import.meta.env.VITE_REACT_APP_SERVER_URL}/signup`;
+    let url = ""
+
+    if(import.meta.env.VITE_REACT_APP_SERVER_URL === "://localhost:8080"){
+      url = isSignIn
+      ? `http${import.meta.env.VITE_REACT_APP_SERVER_URL}/signin`
+      : `http${import.meta.env.VITE_REACT_APP_SERVER_URL}/signup`;
+    }
+    else{
+      url = isSignIn
+      ? `https${import.meta.env.VITE_REACT_APP_SERVER_URL}/signin`
+      : `https${import.meta.env.VITE_REACT_APP_SERVER_URL}/signup`;
+    }
+
 
     try {
       const response = await fetch(url, {
@@ -41,6 +51,7 @@ const Auth: React.FC = () => {
         toast.error(result.message);
       }
     } catch (error) {
+      console.log(error)
       toast.error("An error occurred. Please try again.");
     } finally {
       setSubmitting(false); // Reset submitting state

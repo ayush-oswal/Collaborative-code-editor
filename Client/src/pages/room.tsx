@@ -41,7 +41,14 @@ const Room: React.FC = () => {
     if(username==''){
       Navigate("/auth")
     }
-    const newSocket = new WebSocket('ws://localhost:8080');
+    let ws_url = ""
+    if(import.meta.env.VITE_REACT_APP_SERVER_URL === "://localhost:8080"){
+      ws_url = `ws${import.meta.env.VITE_REACT_APP_SERVER_URL}`
+    } 
+    else{
+      ws_url = `wss${import.meta.env.VITE_REACT_APP_SERVER_URL}`
+    }
+    const newSocket = new WebSocket(ws_url);
     newSocket.onopen = () => {
       console.log('Connection established');
       const msg = {
