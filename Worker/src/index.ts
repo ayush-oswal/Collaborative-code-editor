@@ -65,7 +65,7 @@ async function pollJudge0Result(token: string, apiKey: string) {
             }
 
             const resultData = response.data;
-
+            
             if (resultData.status.id > 2) {
                 //i.e result is processed
                 return resultData;

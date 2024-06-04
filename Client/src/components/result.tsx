@@ -16,6 +16,7 @@ interface ResultMessage {
   stdout: string;
   stderr: string | null;
   status: string;
+  compile_output: string | null;
 }
 
 interface ResultModalProps {
@@ -34,6 +35,7 @@ const ResultModal: React.FC<ResultModalProps> = ({ isOpen, onClose, resultMessag
         <ModalBody>
           <Text><strong>Status:</strong> {resultMessage.status}</Text>
           <Text><strong>Output:</strong> {resultMessage.stdout}</Text>
+          { resultMessage.compile_output && <Text><strong></strong> {resultMessage.compile_output}</Text>}
           {resultMessage.stderr && <Text><strong>Error:</strong> {resultMessage.stderr}</Text>}
         </ModalBody>
         <ModalFooter>

@@ -22,33 +22,6 @@ Welcome to the Collaborative Code Editor (CCE) repository! This application allo
 
 ## 📦 Setup Guide
 
-### Using Docker
-1. **Clone the repository**:
-    ```sh
-    git clone https://github.com/yourusername/collaborative-code-editor.git
-    cd collaborative-code-editor
-    ```
-
-2. **Create a `.env` file** in each folder and configure your environment variables:
-    ```env
-    # Example Client .env file
-	    VITE_REACT_APP_SERVER_URL =
-    # Example Server .env file
-	    MONGO_URL =
-	# Example Worker .env file
-		//judge0 api key
-		X_RAPID_API_KEY = 
-    ```
-
-3. **Build and start the application**:
-    ```sh
-    docker-compose up --build
-    ```
-
-4. **Access the application**:
-    - Open your browser and go to `http://localhost:8080` for the server service.
-    - Go to `http://localhost:5173` to access the client interface.
-
 ### Manual Setup
 1. **Clone the repository**:
     ```sh
@@ -71,25 +44,37 @@ Welcome to the Collaborative Code Editor (CCE) repository! This application allo
     npm install
     ```
 
-3. **Create a `.env` file** in each service directory and configure your environment variables as needed.
+3. **Create a `.env` file** in each folder and configure your environment variables:
+    ```env
+    # Example Client .env file
+	    VITE_REACT_APP_SERVER_URL =
+    # Example Server .env file
+	    MONGO_URL =
+	# Example Worker .env file
+		//judge0 api key
+		X_RAPID_API_KEY = 
+ 
 
-4. **Start each service**:
+4. **Start redis locally**
     ```sh
-    # In separate terminals or use tmux/screen
-    # Start Redis
-    redis-server
+    # In separate terminal
+    # Using Docker
+    docker run -p 6379:6379 --name redis-server -d redis
+    ```
 
+5. **Start each service**:
+    ```sh
     # Start Server
     cd server
-    npm start
+    npm run start
 
     # Start Worker
     cd ../worker
-    npm start
+    npm run start
 
     # Start Client
     cd ../client
-    npm start
+    npm run dev
     ```
 
 ## 🚀 How It Works
