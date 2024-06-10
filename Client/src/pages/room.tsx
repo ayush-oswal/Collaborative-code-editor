@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import {useUserStore} from '../../store'
+import {useUserStore} from '../store'
 import { Box, Button, Flex, IconButton, Select, useDisclosure, Drawer, DrawerBody, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, useBreakpointValue, Spinner } from '@chakra-ui/react';
 import { HamburgerIcon, ChatIcon } from '@chakra-ui/icons';
 import CodeMirror from '@uiw/react-codemirror';

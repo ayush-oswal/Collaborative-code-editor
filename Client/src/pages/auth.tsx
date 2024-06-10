@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useUserStore } from '../../store';
+import { useUserStore } from '../store';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { Spinner } from '@chakra-ui/react'; // Import Chakra UI Spinner

@@ -13,8 +13,6 @@ services:
     build:
       context: ./Server
       dockerfile: Dockerfile
-    env_file:
-      - ./Server/.env
     container_name: server
     depends_on:
       - redis
@@ -27,8 +25,6 @@ services:
     build:
       context: ./Worker
       dockerfile: Dockerfile
-    env_file:
-      - ./Worker/.env
     container_name: worker
     depends_on:
       - redis
@@ -39,8 +35,6 @@ services:
     build:
       context: ./Client
       dockerfile: Dockerfile
-    env_file:
-      - ./Client/.env
     container_name: client
     depends_on:
       - server

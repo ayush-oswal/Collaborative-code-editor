@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {useUserStore} from '../../store'
+import {useUserStore} from '../store'
 
 const JoinRoom: React.FC = () => {
   const Navigate = useNavigate()
