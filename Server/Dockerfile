@@ -8,10 +8,7 @@ WORKDIR /src
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
-
-# Rebuild bcrypt to ensure compatibility with the Docker environment
-RUN npm rebuild bcrypt --build-from-source
+RUN npm install 
 
 # Copy the rest of the application code
 COPY . .

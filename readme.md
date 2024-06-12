@@ -77,6 +77,28 @@ Welcome to the Collaborative Code Editor (CCE) repository! This application allo
     npm run dev
     ```
 
+### Docker Setup
+1. **Navigate to the root directory**:
+    ```sh
+    cd path/to/collaborative-code-editor
+    ```
+
+2. **Build and run the stack of containers**:
+    ```sh
+    docker-compose up --build
+    ```
+
+### Troubleshooting
+- If you encounter an issue with `bcrypt` related to an invalid ELF header, perform the following steps:
+    ```sh
+    # Enter the server container using bin/bash
+    docker exec -it server_container_name /bin/bash
+
+    # Inside the container, reinstall bcrypt
+    npm install bcrypt
+    ```
+
+
 ## 🚀 How It Works
 1. **Sign Up / Log In**: Users sign up or log in with a unique username.
 2. **Create / Join Room**: Users can create a new room with a unique room ID or join an existing room.
