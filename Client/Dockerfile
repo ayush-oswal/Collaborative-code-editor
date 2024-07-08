@@ -16,5 +16,9 @@ COPY . .
 # Expose the port the app runs on
 EXPOSE 5173
 
+COPY entrypoint.sh /usr/local/bin/
+
+ENTRYPOINT ["entrypoint.sh"]
+
 # Command to run the app in development mode
 CMD ["npm", "run", "dev"]
