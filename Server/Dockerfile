@@ -16,5 +16,9 @@ COPY . .
 # Expose the port the server runs on
 EXPOSE 8080
 
+COPY entrypoint.sh /usr/local/bin/
+
+ENTRYPOINT ["entrypoint.sh"]
+
 # Command to run the server
 CMD ["npm", "start"]
