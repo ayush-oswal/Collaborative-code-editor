@@ -50,9 +50,11 @@ Welcome to the Collaborative Code Editor (CCE) repository! This application allo
 	    VITE_REACT_APP_SERVER_URL =
     # Example Server .env file
 	    MONGO_URL =
+        REDIS_URL = 
 	# Example Worker .env file
 		//judge0 api key
 		X_RAPID_API_KEY = 
+        REDIS_URL =
  
 
 4. **Start redis locally**
@@ -83,7 +85,19 @@ Welcome to the Collaborative Code Editor (CCE) repository! This application allo
     cd path/to/collaborative-code-editor
     ```
 
-2. **Build and run the stack of containers**:
+2. **Create a `.env` file** in each folder and configure your environment variables: (Refer the .env.example file)
+    ```env
+    # Example Client .env file
+	    VITE_REACT_APP_SERVER_URL =
+    # Example Server .env file
+	    MONGO_URL =
+        REDIS_URL = 
+	# Example Worker .env file
+		//judge0 api key
+		X_RAPID_API_KEY = 
+        REDIS_URL =
+
+3. **Build and run the stack of containers**:
     ```sh
     docker-compose up --build
     ```
