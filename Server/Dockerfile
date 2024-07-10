@@ -16,9 +16,14 @@ COPY . .
 # Expose the port the server runs on
 EXPOSE 8080
 
-COPY entrypoint.sh /usr/local/bin/
+# Copy the entrypoint script
+COPY entrypoint.sh .
 
-ENTRYPOINT ["entrypoint.sh"]
+# Make the entrypoint script executable
+RUN chmod +x entrypoint.sh
+
+# Use the shell to run the entrypoint script
+ENTRYPOINT ["sh", "/src/entrypoint.sh"]
 
 # Command to run the server
 CMD ["npm", "start"]

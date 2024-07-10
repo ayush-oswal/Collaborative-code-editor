@@ -21,9 +21,8 @@
     "ws": "^8.17.0"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "bcrypt": "^5.1.1",
     "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
     "cors": "^2.8.5",
     "typescript": "^5.4.5"
   }

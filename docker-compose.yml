@@ -18,8 +18,6 @@ services:
       - redis
     ports:
       - "8080:8080"
-    volumes:
-      - ./Server:/src
 
   worker:
     build:
@@ -28,8 +26,6 @@ services:
     container_name: worker
     depends_on:
       - redis
-    volumes:
-      - ./Worker:/src
 
   client:
     build:
@@ -40,8 +36,6 @@ services:
       - server
     ports:
       - "5173:5173"
-    volumes:
-      - ./Client:/src
 
 volumes:
   redis-data:

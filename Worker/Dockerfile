@@ -13,9 +13,14 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
-COPY entrypoint.sh /usr/local/bin/
+# Copy the entrypoint script
+COPY entrypoint.sh .
 
-ENTRYPOINT ["entrypoint.sh"]
+# Make the entrypoint script executable
+RUN chmod +x entrypoint.sh
+
+# Use the shell to run the entrypoint script
+ENTRYPOINT ["sh", "/src/entrypoint.sh"]
 
 # Command to run the worker
 CMD ["npm", "start"]
