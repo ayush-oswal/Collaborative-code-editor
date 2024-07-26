@@ -211,7 +211,7 @@ const Room: React.FC = () => {
           <DrawerOverlay />
           <DrawerContent bg="blue.900">
             <DrawerCloseButton />
-            <DrawerHeader><div className='text-4xl text-center'>Members</div></DrawerHeader>
+            <DrawerHeader><div className='text-white text-4xl text-center'>Members</div></DrawerHeader>
             <DrawerBody>
             <Members users={users} onLeave={onLeave} roomId={roomId || ""} />
             </DrawerBody>
@@ -290,7 +290,7 @@ const Room: React.FC = () => {
           <DrawerOverlay />
           <DrawerContent bg="blue.900">
             <DrawerCloseButton />
-            <DrawerHeader><div className='text-4xl text-center'>Chats</div></DrawerHeader>
+            <DrawerHeader><div className='text-white text-4xl text-center'>Chats</div></DrawerHeader>
             <DrawerBody>
               <Chats chats={chats} addChat={addChat} />
             </DrawerBody>

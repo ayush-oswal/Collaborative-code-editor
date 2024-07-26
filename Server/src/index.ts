@@ -6,6 +6,7 @@ import cors from 'cors'
 import ConnectDB from './database'
 import bcrypt from 'bcrypt'
 import User from "./database/models/User"
+import { RoomManager } from './utils/roomManager'
 
 const app = express()
 const httpServer = app.listen(8080,()=>{
@@ -31,7 +32,7 @@ const redisClientSubscribing = createClient({
 redisClient.connect().catch(err=>{console.log(err)})
 redisClientSubscribing.connect().catch(err=>{console.log(err)})
 
-type room = {
+interface room {
   name: string,
   roomId: string,
   users: Array<{
@@ -57,24 +58,42 @@ wss.on('connection', function connection(ws) {
 
   ws.on('message', function message(data, isBinary) {
     const message = JSON.parse(data.toString());
-    console.log("Message received:", message);
+    // console.log("Message received:", message);
+    // if(message.Title==="User-joined"){
+    //   handleUserJoined(message, ws);
+    // }
+    // else if(message.Title==="User-left"){
+    //   handleUserLeft(message)
+    // }
+    // else if(message.Title==="New-chat"){
+    //   handleNewChat(message)
+    // }
+    // else if(message.Title==="lang-change"){
+    //   handleLangChange(message)
+    // }
+    // else if(message.Title==="Code-change"){
+    //   handleCodeChange(message)
+    // }
+    // else if(message.Title==="Submitted"){
+    //   handleSubmitted(message)
+    // }
     if(message.Title==="User-joined"){
-      handleUserJoined(message, ws);
+      RoomManager.getInstance().handleUserJoined(message, ws);
     }
     else if(message.Title==="User-left"){
-      handleUserLeft(message)
+      RoomManager.getInstance().handleUserLeft(message)
     }
     else if(message.Title==="New-chat"){
-      handleNewChat(message)
+      RoomManager.getInstance().handleNewChat(message)
     }
     else if(message.Title==="lang-change"){
-      handleLangChange(message)
+      RoomManager.getInstance().handleLangChange(message)
     }
     else if(message.Title==="Code-change"){
-      handleCodeChange(message)
+      RoomManager.getInstance().handleCodeChange(message)
     }
     else if(message.Title==="Submitted"){
-      handleSubmitted(message)
+      RoomManager.getInstance().handleSubmitted(message)
     }
   });
 
@@ -129,226 +148,221 @@ app.post("/create",(req:Request,res:Response)=>{
     res.status(400).json({error : "Some error"})
     return;
   }
+
+  try{
+    RoomManager.getInstance().create(req.body)
+    res.status(200).json({ message: 'Room created successfully' });
+  }
+  catch(e){
+    res.status(500).json({ message: 'Server error' });
+  }
   
-  const newRoom: room = {
-    name: roomName,
-    roomId: roomId,
-    users: [],
-    code: "",
-    chats: [],
-    language: "python",
-    result: ""
-  };
-
-  rooms.push(newRoom)
-  res.status(200).json({ message: 'Room created successfully' });
-
 })
 
 
 //Controllers
 
-function handleUserJoined(message:any, ws : WebSocket) {
-  const { roomId, username } = message;
+// function handleUserJoined(message:any, ws : WebSocket) {
+//   const { roomId, username } = message;
+//   console.log(rooms)
+//   // Find the room based on roomId
+//   const room = rooms.find(room => room.roomId === roomId);
+//   if (!room) {
+//     const notFoundMessage = JSON.stringify({
+//       Title : "Not-found"
+//     })
+//     ws.send(notFoundMessage)
+//     return;
+//   }
 
-  // Find the room based on roomId
-  const room = rooms.find(room => room.roomId === roomId);
-  if (!room) {
-    const notFoundMessage = JSON.stringify({
-      Title : "Not-found"
-    })
-    ws.send(notFoundMessage)
-    return;
-  }
+//   console.log(room)
 
-  console.log(room)
+//   // Check if the user is already in the room
+//   const existingUserIndex = room.users.findIndex(user => user.username === username);
+//   if (existingUserIndex !== -1) {
+//     // Update the existing user's WebSocket connection
+//     room.users[existingUserIndex].ws = ws;
 
-  // Check if the user is already in the room
-  const existingUserIndex = room.users.findIndex(user => user.username === username);
-  if (existingUserIndex !== -1) {
-    // Update the existing user's WebSocket connection
-    room.users[existingUserIndex].ws = ws;
+//     // Send room info to the existing user
+//     const roomInfoMessage = JSON.stringify({
+//       Title: "Room-Info",
+//       roomId,
+//       roomName: room.name,
+//       users: room.users.map(user => user.username),
+//       code: room.code,
+//       chats: room.chats,
+//       language: room.language,
+//       result: room.result
+//     });
+//     ws.send(roomInfoMessage);
+//     return;
+//   }
 
-    // Send room info to the existing user
-    const roomInfoMessage = JSON.stringify({
-      Title: "Room-Info",
-      roomId,
-      roomName: room.name,
-      users: room.users.map(user => user.username),
-      code: room.code,
-      chats: room.chats,
-      language: room.language,
-      result: room.result
-    });
-    ws.send(roomInfoMessage);
-    return;
-  }
+//   // Add the user to the room
+//   room.users.push({ username, ws });
 
-  // Add the user to the room
-  room.users.push({ username, ws });
+//   // Send a message to all other users in the room about the new user
+//   const newUserMessage = JSON.stringify({
+//     Title: "New-User",
+//     username
+//   });
 
-  // Send a message to all other users in the room about the new user
-  const newUserMessage = JSON.stringify({
-    Title: "New-User",
-    username
-  });
+//   room.users.forEach(user => {
+//     if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
+//       user.ws.send(newUserMessage);
+//     }
+//   });
 
-  room.users.forEach(user => {
-    if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
-      user.ws.send(newUserMessage);
-    }
-  });
-
-  // Send room info to the newly joined user
-  const roomInfoMessage = JSON.stringify({
-    Title: "Room-Info",
-    roomId,
-    roomName: room.name,
-    users: room.users.map(user => user.username),
-    code: room.code,
-    chats: room.chats,
-    language: room.language,
-    result: room.result
-  });
-  ws.send(roomInfoMessage);
-}
+//   // Send room info to the newly joined user
+//   const roomInfoMessage = JSON.stringify({
+//     Title: "Room-Info",
+//     roomId,
+//     roomName: room.name,
+//     users: room.users.map(user => user.username),
+//     code: room.code,
+//     chats: room.chats,
+//     language: room.language,
+//     result: room.result
+//   });
+//   ws.send(roomInfoMessage);
+// }
 
 
-function handleUserLeft(message: any) {
-  const { roomId, username } = message;
+// function handleUserLeft(message: any) {
+//   const { roomId, username } = message;
 
-  // Find the room based on roomId
-  const room = rooms.find(room => room.roomId === roomId);
-  if (!room) {
-    return;
-  }
+//   // Find the room based on roomId
+//   const room = rooms.find(room => room.roomId === roomId);
+//   if (!room) {
+//     return;
+//   }
 
-  // Remove the user from the room
-  room.users = room.users.filter(user => user.username !== username);
+//   // Remove the user from the room
+//   room.users = room.users.filter(user => user.username !== username);
 
-  // Notify remaining users in the room
-  const userLeftMessage = JSON.stringify({
-    Title: "User-left",
-    username,
-    users: room.users.map(user => user.username)
-  });
+//   // Notify remaining users in the room
+//   const userLeftMessage = JSON.stringify({
+//     Title: "User-left",
+//     username,
+//     users: room.users.map(user => user.username)
+//   });
 
-  room.users.forEach(user => {
-    if (user.ws.readyState === WebSocket.OPEN) {
-      user.ws.send(userLeftMessage);
-    }
-  });
-}
+//   room.users.forEach(user => {
+//     if (user.ws.readyState === WebSocket.OPEN) {
+//       user.ws.send(userLeftMessage);
+//     }
+//   });
+// }
 
-function handleNewChat(message:any){
-  const {roomId, username, chat} = message
-  const room = rooms.find(room => room.roomId === roomId);
-  if (!room) {
-    return;
-  }
-  room.chats.push({username,message:chat})
-  const newChatMessage = JSON.stringify({
-    Title: "New-chat",
-    username,
-    chat
-  })
-  room.users.forEach(user => {
-    if (user.ws.readyState === WebSocket.OPEN) {
-      user.ws.send(newChatMessage);
-    }
-  });
-}
+// function handleNewChat(message:any){
+//   const {roomId, username, chat} = message
+//   const room = rooms.find(room => room.roomId === roomId);
+//   if (!room) {
+//     return;
+//   }
+//   room.chats.push({username,message:chat})
+//   const newChatMessage = JSON.stringify({
+//     Title: "New-chat",
+//     username,
+//     chat
+//   })
+//   room.users.forEach(user => {
+//     if (user.ws.readyState === WebSocket.OPEN) {
+//       user.ws.send(newChatMessage);
+//     }
+//   });
+// }
 
-function handleLangChange(message:any){
-  const { roomId, lang } = message
-  const room = rooms.find(room => room.roomId === roomId);
-  if (!room) {
-    return;
-  }
-  room.language = lang;
-  const langChangeMessage = {
-    Title:"lang-change",
-    lang
-  }
-  room.users.forEach(user => {
-    if (user.ws.readyState === WebSocket.OPEN) {
-      user.ws.send(JSON.stringify(langChangeMessage));
-    }
-  });
-}
+// function handleLangChange(message:any){
+//   const { roomId, lang } = message
+//   const room = rooms.find(room => room.roomId === roomId);
+//   if (!room) {
+//     return;
+//   }
+//   room.language = lang;
+//   const langChangeMessage = {
+//     Title:"lang-change",
+//     lang
+//   }
+//   room.users.forEach(user => {
+//     if (user.ws.readyState === WebSocket.OPEN) {
+//       user.ws.send(JSON.stringify(langChangeMessage));
+//     }
+//   });
+// }
 
-function handleCodeChange(message:any){
-  const { roomId, code } = message
-  const room = rooms.find(room => room.roomId === roomId);
-  if (!room) {
-    return;
-  }
-  room.code=code
-  const CodeChangeMessage = {
-    Title:"Code-change",
-    code
-  }
-  room.users.forEach(user => {
-    if (user.ws.readyState === WebSocket.OPEN) {
-      user.ws.send(JSON.stringify(CodeChangeMessage));
-    }
-  });
-}
+// function handleCodeChange(message:any){
+//   const { roomId, code } = message
+//   const room = rooms.find(room => room.roomId === roomId);
+//   if (!room) {
+//     return;
+//   }
+//   room.code=code
+//   const CodeChangeMessage = {
+//     Title:"Code-change",
+//     code
+//   }
+//   room.users.forEach(user => {
+//     if (user.ws.readyState === WebSocket.OPEN) {
+//       user.ws.send(JSON.stringify(CodeChangeMessage));
+//     }
+//   });
+// }
 
-async function handleSubmitted(message:any){
-  const {roomId} = message
-  const room = rooms.find(room => room.roomId === roomId);
-  if (!room) {
-    return;
-  }
+// async function handleSubmitted(message:any){
+//   const {roomId} = message
+//   const room = rooms.find(room => room.roomId === roomId);
+//   if (!room) {
+//     return;
+//   }
 
-  const SubmitClickedMessage = {
-    Title:"Submit-clicked"
-  }
+//   const SubmitClickedMessage = {
+//     Title:"Submit-clicked"
+//   }
 
-  room.users.forEach(user => {
-    if (user.ws.readyState === WebSocket.OPEN) {
-      user.ws.send(JSON.stringify(SubmitClickedMessage));
-    }
-  });
+//   room.users.forEach(user => {
+//     if (user.ws.readyState === WebSocket.OPEN) {
+//       user.ws.send(JSON.stringify(SubmitClickedMessage));
+//     }
+//   });
 
-  if(process.env.REDIS_URL === "No-Url-provided" || !process.env.REDIS_URL){
-    const resultMessage = {
-      Title: "No-worker"
-    }
-    room.users.forEach(user => {
-      if (user.ws.readyState === WebSocket.OPEN) {
-        user.ws.send(JSON.stringify(resultMessage));
-      }
-    });
-    return;
-  }
+//   if(process.env.REDIS_URL === "No-Url-provided" || !process.env.REDIS_URL){
+//     const resultMessage = {
+//       Title: "No-worker"
+//     }
+//     room.users.forEach(user => {
+//       if (user.ws.readyState === WebSocket.OPEN) {
+//         user.ws.send(JSON.stringify(resultMessage));
+//       }
+//     });
+//     return;
+//   }
   
-  //push the message into submissions queue
-  await redisClient.lPush("submissions",JSON.stringify(message))
+//   //push the message into submissions queue
+//   await redisClient.lPush("submissions",JSON.stringify(message))
 
 
-  //subscribe to the roomId
-  redisClientSubscribing.subscribe(roomId, (result) => {
-    console.log(`Result for ${roomId}: ${result}`);
+//   //subscribe to the roomId
+//   redisClientSubscribing.subscribe(roomId, (result) => {
+//     console.log(`Result for ${roomId}: ${result}`);
     
-    // Parse the result received from the subscription
-    const parsedResult = JSON.parse(result);
+//     // Parse the result received from the subscription
+//     const parsedResult = JSON.parse(result);
     
-    // Create a new JSON object containing the required fields
-    const resultMessage = {
-        Title: "Result",
-        stdout: parsedResult.stdout,
-        stderr: parsedResult.stderr,
-        status: parsedResult.status.description,
-        compile_output: parsedResult.compile_output
-    };
+//     // Create a new JSON object containing the required fields
+//     const resultMessage = {
+//         Title: "Result",
+//         stdout: parsedResult.stdout,
+//         stderr: parsedResult.stderr,
+//         status: parsedResult.status.description,
+//         compile_output: parsedResult.compile_output
+//     };
 
-    // Send the resultMessageString to each user in the room
-    room.users.forEach(user => {
-      if (user.ws.readyState === WebSocket.OPEN) {
-        user.ws.send(JSON.stringify(resultMessage));
-      }
-    });
-  });
-}
+//     // Send the resultMessageString to each user in the room
+//     room.users.forEach(user => {
+//       if (user.ws.readyState === WebSocket.OPEN) {
+//         user.ws.send(JSON.stringify(resultMessage));
+//       }
+//     });
+//   });
+// }
