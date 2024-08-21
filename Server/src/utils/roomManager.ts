@@ -246,7 +246,7 @@ export class RoomManager {
         //subscribe to the roomId
         redisClientSubscribing.subscribe(roomId, (result) => {
           // console.log(`Result for ${roomId}: ${result}`);
-          
+          redisClientSubscribing.unsubscribe(roomId)
           // Parse the result received from the subscription
           const parsedResult = JSON.parse(result);
           
