@@ -60,7 +60,7 @@ const Room: React.FC = () => {
     }
     newSocket.onmessage = (message) => {
       const parsedMessage = JSON.parse(message.data);
-      console.log('Message received:', parsedMessage);
+
       if (parsedMessage.Title === "Room-Info") {
         setUsers(parsedMessage.users);
         setCode(parsedMessage.code);
@@ -110,6 +110,10 @@ const Room: React.FC = () => {
       else if(parsedMessage.Title === "No-worker"){
         setSubmitClicked(false)
         alert("Code cannot be processed now cause it requires a continiously running worker service whcih is expensive 😅😅, if you want to, you can clone the repo and run worker process locally!!")
+      }
+      else if(parsedMessage.Title === "error"){
+        setSubmitClicked(false)
+        alert("Error processing code as of now, retry or check code for errors!")
       }
     }
     setSocket(newSocket)

@@ -46,6 +46,7 @@ async function processSubmission(submission: string) {
         console.log(`Published result to room: ${roomId}`);
     } catch (error) {
         console.error(`Error processing submission for room: ${roomId}`, error);
+        await redisClient.publish(roomId,"error");
     }
 }
 

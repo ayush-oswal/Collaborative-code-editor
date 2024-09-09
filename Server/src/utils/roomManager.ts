@@ -248,9 +248,19 @@ export class RoomManager {
           // console.log(`Result for ${roomId}: ${result}`);
           redisClientSubscribing.unsubscribe(roomId)
           // Parse the result received from the subscription
-          const parsedResult = JSON.parse(result);
-          
-          // Create a new JSON object containing the required fields
+          if(result==="error"){
+            const msg = {
+              Title : "error"
+            }
+            room.users.forEach(user => {
+              if (user.ws.readyState === WebSocket.OPEN) {
+                user.ws.send(JSON.stringify(msg));
+              }
+            });
+          }
+          else{
+            const parsedResult = JSON.parse(result);
+              // Create a new JSON object containing the required fields
           const resultMessage = {
               Title: "Result",
               stdout: parsedResult.stdout,
@@ -265,6 +275,7 @@ export class RoomManager {
               user.ws.send(JSON.stringify(resultMessage));
             }
           });
+          }
         });
       }
 
