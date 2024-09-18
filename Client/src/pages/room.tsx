@@ -12,6 +12,7 @@ import Members from '../components/members';
 import Chats from '../components/chats';
 import ResultModal from '../components/result';
 import toast, { Toaster } from 'react-hot-toast';
+import { useUser } from '@clerk/clerk-react';
 
 
 type chat = 
@@ -24,7 +25,8 @@ const Room: React.FC = () => {
   const {roomId} = useParams();
   const Navigate = useNavigate()
   const { setRoomID } = useUserStore();
-  const { username } = useUserStore();
+  const {user} = useUser();
+  const username = user?.username
   const [roomName,setRoomName] = useState("")
   const [users, setUsers] = useState<string[]>([])
   const [chats,setChats] = useState<chat[]>([])
@@ -60,7 +62,6 @@ const Room: React.FC = () => {
     }
     newSocket.onmessage = (message) => {
       const parsedMessage = JSON.parse(message.data);
-
       if (parsedMessage.Title === "Room-Info") {
         setUsers(parsedMessage.users);
         setCode(parsedMessage.code);
@@ -176,7 +177,6 @@ const Room: React.FC = () => {
   }
 
   const onSubmit = () => {
-    console.log(code)
     //make a ws req to server, send the code there, subscribe to the roomid on pub-sub
     const msg = {
       Title : "Submitted",

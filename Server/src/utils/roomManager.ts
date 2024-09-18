@@ -35,7 +35,7 @@ export class RoomManager {
 
     public create(roomData : any){
 
-        const {username, roomName, roomId} = roomData
+        const { roomName, roomId} = roomData
 
         const newRoom: room = {
             name: roomName,
@@ -63,7 +63,6 @@ export class RoomManager {
         return;
       }
     
-      // console.log(room)
     
       // Check if the user is already in the room
       const existingUserIndex = room.users.findIndex(user => user.username === username);
@@ -196,15 +195,22 @@ export class RoomManager {
       });
     }
 
-    public async handleSubmitted(message:any) {
-      const redis_url = process.env.REDIS_URL === "No-Url-provided" ? "" : process.env.REDIS_URL
+    public async handleSubmitted(message:any , ws : WebSocket) {
+
+      if(process.env.REDIS_URL === "No-Url-provided" || !process.env.REDIS_URL){
+        const resultMessage = {
+          Title: "No-worker"
+        }
+        ws.send(JSON.stringify(resultMessage))
+        return;
+      }
 
       const redisClient = createClient({
-        url: redis_url
+        url: process.env.REDIS_URL
       });
 
       const redisClientSubscribing = createClient({
-        url: redis_url
+        url: process.env.REDIS_URL
       });
 
 
@@ -227,17 +233,7 @@ export class RoomManager {
           }
         });
       
-        if(process.env.REDIS_URL === "No-Url-provided" || !process.env.REDIS_URL){
-          const resultMessage = {
-            Title: "No-worker"
-          }
-          room.users.forEach(user => {
-            if (user.ws.readyState === WebSocket.OPEN) {
-              user.ws.send(JSON.stringify(resultMessage));
-            }
-          });
-          return;
-        }
+        
         
         //push the message into submissions queue
         await redisClient.lPush("submissions",JSON.stringify(message))
@@ -245,7 +241,6 @@ export class RoomManager {
       
         //subscribe to the roomId
         redisClientSubscribing.subscribe(roomId, (result) => {
-          // console.log(`Result for ${roomId}: ${result}`);
           redisClientSubscribing.unsubscribe(roomId)
           // Parse the result received from the subscription
           if(result==="error"){

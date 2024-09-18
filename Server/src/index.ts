@@ -1,20 +1,23 @@
 import express from 'express'
+import { createServer } from 'http';
 import { Request, Response } from 'express'
 import { WebSocketServer } from 'ws'
 import { createClient } from 'redis'
 import cors from 'cors'
-import ConnectDB from './database'
-import bcrypt from 'bcrypt'
-import User from "./database/models/User"
 import { RoomManager } from './utils/roomManager'
+import dotenv from "dotenv";
+
+dotenv.config(); 
 
 const app = express()
-const httpServer = app.listen(8080,()=>{
-  console.log("Server listening on port 8080")
-})
+const httpServer = createServer(app);
+
 app.use(cors())
 app.use(express.json());
 
+httpServer.listen(8080, () => {
+  console.log(`Server listening on port 8080`);
+});
 
 //connect to redis after launching it from docker
 
@@ -56,53 +59,12 @@ wss.on('connection', function connection(ws) {
       RoomManager.getInstance().handleCodeChange(message)
     }
     else if(message.Title==="Submitted"){
-      RoomManager.getInstance().handleSubmitted(message)
+      RoomManager.getInstance().handleSubmitted(message,ws)
     }
   });
 
   ws.send(JSON.stringify({Title : "Greet" , msg:'Hello! Message From Server!!'}));
 });
-
-app.post("/signin",async(req:Request,res:Response)=>{
-  await ConnectDB();
-  const { username, password } = req.body;
-
-  try {
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(400).json({ message: 'user not found' });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid password' });
-    }
-
-    res.status(200).json({ message: 'Login successful' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-})
-
-app.post("/signup",async(req:Request,res:Response)=>{
-  await ConnectDB();
-  const { username, password } = req.body;
-
-  try {
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Username already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ username, password: hashedPassword });
-    await newUser.save();
-
-    res.status(201).json({ message: 'User created successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-})
 
 app.post("/create",(req:Request,res:Response)=>{
 

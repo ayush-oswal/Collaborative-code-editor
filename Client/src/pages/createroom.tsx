@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
 import {useUserStore} from '../store'
+import { useUser } from '@clerk/clerk-react';
 
 
 
@@ -9,7 +10,9 @@ const CreateRoom: React.FC = () => {
   const [roomName, setRoomName] = useState('');
   const [roomId, setRoomId] = useState('');
   const Navigate = useNavigate()
-  const { username, setRoomID } = useUserStore();
+  const { setRoomID } = useUserStore();
+  const {user} = useUser();
+  const username = user?.username
   useEffect(()=>{
     if(username==''){
         Navigate("/auth")
@@ -22,11 +25,7 @@ const CreateRoom: React.FC = () => {
   };
 
   const handleSubmit = async(event: React.FormEvent<HTMLFormElement>) => {
-    console.log("Submit clicked!")
     event.preventDefault();
-    // Handle room creation here, you can use roomName and roomId
-    console.log('Room Name:', roomName);
-    console.log('Room ID:', roomId);
     if(!roomId || !roomName){
         alert("Fill name and id")
         return;
