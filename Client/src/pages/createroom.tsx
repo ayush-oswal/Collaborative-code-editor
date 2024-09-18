@@ -1,66 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
-import {useUserStore} from '../store'
+import { useUserStore } from '../store';
 import { useUser } from '@clerk/clerk-react';
-
-
+import { Spinner } from '@chakra-ui/react';
 
 const CreateRoom: React.FC = () => {
   const [roomName, setRoomName] = useState('');
   const [roomId, setRoomId] = useState('');
-  const Navigate = useNavigate()
+  const [loading, setLoading] = useState(false); // New state for spinner
+  const Navigate = useNavigate();
   const { setRoomID } = useUserStore();
-  const {user} = useUser();
-  const username = user?.username
-  useEffect(()=>{
-    if(username==''){
-        Navigate("/auth")
+  const { user } = useUser();
+  const username = user?.username;
+
+  useEffect(() => {
+    if (username == '') {
+      Navigate('/auth');
     }
-  })
+  });
 
   const handleGenerateRoomId = () => {
     const newRoomId = uuidv4();
     setRoomId(newRoomId);
   };
 
-  const handleSubmit = async(event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if(!roomId || !roomName){
-        alert("Fill name and id")
-        return;
+    if (!roomId || !roomName) {
+      alert('Fill name and id');
+      return;
     }
+    setLoading(true);
     const serverUrl = import.meta.env.VITE_REACT_APP_SERVER_URL;
-    let url = ""
-    if(serverUrl === "://localhost:8080"){
-      url = `http${serverUrl}`
+    let url = '';
+    if (serverUrl === '://localhost:8080') {
+      url = `http${serverUrl}`;
+    } else {
+      url = `https${serverUrl}`;
     }
-    else{
-      url = `https${serverUrl}`
-    }
-    try{
-      const response = await fetch(`${url}/create`,{
-        method:"POST",
+    try {
+      const response = await fetch(`${url}/create`, {
+        method: 'POST',
         headers: {
-            "Content-Type": "application/json"
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            username,
-            roomName,
-            roomId
-        })
-      })
-      if(response.ok){
-        //Add a toast here
-        setRoomID(roomId)
-        Navigate("/join")
+          username,
+          roomName,
+          roomId,
+        }),
+      });
+      setLoading(false);
+      if (response.ok) {
+        // Add a toast here
+        setRoomID(roomId);
+        Navigate('/join');
+      } else {
+        alert('Error creating room');
       }
-      else{
-        alert("Error creating room")
-      }
-    }
-    catch(err){
-      console.log(err)
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -90,14 +90,19 @@ const CreateRoom: React.FC = () => {
             Generate Room ID
           </button>
         </div>
-        {roomId && 
-        <button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-600 text-blue-100 font-semibold px-4 py-2 rounded"
-        >
-          Create Room
-        </button>
-        }
+
+        {roomId && !loading && (
+          <button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-600 text-blue-100 font-semibold px-4 py-2 rounded"
+          >
+            Create Room
+          </button>
+        )}
+
+        {loading && (
+          <Spinner size="lg" color="blue.500" className="mt-4" />
+        )}
       </form>
     </div>
   );
