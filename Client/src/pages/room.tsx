@@ -145,6 +145,12 @@ const Room: React.FC = () => {
 
   const onLeave = () => {
     //fire websocket event
+    if(users.length==1){
+      const confirmation = window.confirm(
+        "You are the last user in this room. If you leave, all data will be deleted. Do you want to proceed?"
+      );
+      if(!confirmation) return;
+    }
     const msg = {
       Title : "User-left",
       roomId,

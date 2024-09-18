@@ -125,6 +125,11 @@ export class RoomManager {
     
       // Remove the user from the room
       room.users = room.users.filter(user => user.username !== username);
+
+      if(room.users.length===0){
+        this.rooms = this.rooms.filter(room => room.roomId !== roomId)
+        return;
+      }
     
       // Notify remaining users in the room
       const userLeftMessage = JSON.stringify({
