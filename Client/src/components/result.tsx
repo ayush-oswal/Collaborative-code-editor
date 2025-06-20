@@ -8,7 +8,8 @@ import {
   ModalBody,
   ModalCloseButton,
   Button,
-  Text
+  Text,
+  useColorModeValue
 } from '@chakra-ui/react';
 
 interface ResultMessage {
@@ -26,16 +27,19 @@ interface ResultModalProps {
 }
 
 const ResultModal: React.FC<ResultModalProps> = ({ isOpen, onClose, resultMessage }) => {
+  const bgColor = useColorModeValue('gray.800', 'gray.800');
+  const textColor = useColorModeValue('white', 'white');
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent bg={bgColor} color={textColor}>
         <ModalHeader>{resultMessage.Title}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <Text><strong>Status:</strong> {resultMessage.status}</Text>
           <Text><strong>Output:</strong> {resultMessage.stdout}</Text>
-          { resultMessage.compile_output && <Text><strong></strong> {resultMessage.compile_output}</Text>}
+          { resultMessage.compile_output && <Text><strong>Compile Output:</strong> {resultMessage.compile_output}</Text>}
           {resultMessage.stderr && <Text><strong>Error:</strong> {resultMessage.stderr}</Text>}
         </ModalBody>
         <ModalFooter>

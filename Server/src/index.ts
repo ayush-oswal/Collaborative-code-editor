@@ -19,6 +19,10 @@ httpServer.listen(8080, () => {
   console.log(`Server listening on port 8080`);
 });
 
+app.get("/",(req:Request,res:Response)=>{
+  res.status(200).json({message:"Hello world"})
+})
+
 //connect to redis after launching it from docker
 
 const redis_url = process.env.REDIS_URL === "No-Url-provided" ? "" : process.env.REDIS_URL

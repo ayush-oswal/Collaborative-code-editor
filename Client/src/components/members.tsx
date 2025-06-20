@@ -15,7 +15,7 @@ const Members: React.FC<MembersProps> = ({ users, roomId, onLeave }) => {
   };
 
   return (
-    <Box display="flex" flexDirection="column" height="100%">
+    <Box display="flex" flexDirection="column" height="100%" color="white">
       <Box
         display="flex"
         flex="1"

@@ -53,6 +53,7 @@ export class RoomManager {
 
     public handleUserJoined(message:any, ws : WebSocket) {
       const { roomId, username } = message;
+      if(username==="") return;
       // Find the room based on roomId
       const room = this.rooms.find(room => room.roomId === roomId);
       if (!room) {
@@ -116,7 +117,7 @@ export class RoomManager {
 
     public handleUserLeft(message: any) {
       const { roomId, username } = message;
-    
+      if(username==="") return;
       // Find the room based on roomId
       const room = this.rooms.find(room => room.roomId === roomId);
       if (!room) {
